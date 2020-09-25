@@ -1,0 +1,145 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from scipy.interpolate import griddata
+
+
+""" basic 2d incompressible fluid dyn sim """
+
+""" Constants """
+L = 10 # units in meters
+dx,dy = [.1,.1] # units in meters
+dt = .004 # units in seconds (assume dt <= (dx^2 / 2))
+rho = 1.225 # units in kg/m^3 (approx density of air at STP)
+mu = 0.4 # units in kg/(m*s) (approx viscosity of ???)
+t = 1800 # number of steps to run sim
+""" ------------------------------------------------------------------- """
+
+""" Setting up coordinate grid """
+x = np.arange(-L,L+dx, step = dx)
+y = np.arange(-L,L+dy, step = dy)
+X,Y = np.meshgrid(x,y)
+positions = np.vstack([X.ravel(), Y.ravel()]) # all coordinate pairs in sim
+
+""" -------------------------------------------------------------------- """
+
+""" Test Particle (Not currently being used)"""
+x_p_0 = X # initial x position of test particle (recall that you can only use points on the grid)
+y_p_0 = Y # initial y position of test particle (recall that you can only use points on the grid)
+""" -------------------------------------------------------------------- """
+
+""" Boundary and initial conditions """
+Vx_0 = np.zeros((len(x),len(y)))
+Vx_0[7:15,0] = 1.8   # flow x speed in m/s at x = -L and ?<y<? 
+Vx_0[15:23,-1] = -1.8 # flow x speed in m/s at x = L and ?<y<?
+
+Vx_0[0,:] = 0.0 # flow x speed in m/s at -L <= x <= L and y = -L
+Vx_0[-1,:] = 0.0 # flow x speed in m/s at -L <= x <= L and y = -L
+
+
+Vy_0 = np.zeros((len(x),len(y)))
+Vy_0[0,:] = 0.0 # flow y speed in m/s at -L <= x <= L and y = -L
+Vy_0[-1,:] = 0.0 # flow y speed in m/s at -L <= x <= L and y = -L
+
+
+dyn_p_0 = np.zeros((len(x),len(y)))
+dyn_p_0[1:-1,1:-1] = (dx**2 * dy**2)/(-2*(dx**2 + dy**2))*(-(dyn_p_0[1:-1,2:] + dyn_p_0[1:-1,:-2])/(dx**2) -\
+(dyn_p_0[2:,1:-1] + dyn_p_0[:-2,1:-1])/(dy**2) 
+-rho * ( ((Vx_0[1:-1,2:]-Vx_0[1:-1,:-2])/(2*dx))**2 +\
+2*((Vx_0[2:,1:-1]-Vx_0[:-2,1:-1])/(2*dy) + (Vy_0[1:-1,2:]-Vy_0[1:-1,:-2])/(2*dx))\
++ ((Vy_0[2:,1:-1]-Vy_0[:-2,1:-1])/(2*dy))**2))
+""" --------------------------------------------------------------------- """
+
+Vx_1 = np.zeros((len(x),len(y)))
+Vx_1[7:15,0] = Vx_0[7:15,0]
+Vx_1[15:23,-1] = Vx_0[15:23,-1]
+Vx_1[0,:]=Vx_0[0,:]
+Vx_1[-1,:]=Vx_0[-1,:]
+Vy_1 = np.zeros((len(x),len(y)))
+Vy_1[0,:] = Vy_0[0,:]
+Vy_1[-1,:] = Vy_0[-1,:]
+
+
+Vx_t = Vx_1.reshape(len(x),len(y),1)
+Vy_t = Vy_1.reshape(len(x),len(y),1)
+
+speed_t = np.sqrt((Vx_1**2 + Vy_1**2))
+speed_t = speed_t.reshape(len(x),len(y),1)
+
+dyn_p_t = dyn_p_0.reshape(len(x),len(y),1)
+
+x_t = x_p_0.reshape(len(x),len(y),1)
+y_t = y_p_0.reshape(len(x),len(y),1)
+
+for t in range(0,t):
+    
+    # Vx_0_interp = griddata((X.ravel(),Y.ravel()), Vx_0.ravel(),(x_p_0,y_p_0),method = 'linear') # interpolating Vx field to calculate Vx(x,y)
+    # Vy_0_interp = griddata((X.ravel(),Y.ravel()), Vy_0.ravel(),(x_p_0,y_p_0),method = 'linear') # interpolating Vy field to calculate Vy(x,y)
+    
+    # x_p_1 = x_p_0 + Vx_0_interp*dt
+    # y_p_1 = y_p_0 + Vy_0_interp*dt
+     
+    Vx_1[1:-1,1:-1] = Vx_0[1:-1,1:-1] - (dt/(2*dx*rho)) * (dyn_p_0[1:-1,2:] - dyn_p_0[1:-1,0:-2])\
+    + dt *(mu/rho)* ( (Vx_0[1:-1,2:] - 2*Vx_0[1:-1,1:-1] + Vx_0[1:-1,:-2])/dx**2\
+    +(Vx_0[2:,1:-1] - 2*Vx_0[1:-1,1:-1] + Vx_0[:-2,1:-1])/dy**2)\
+    - (dt/(2*dx))*Vx_0[1:-1,1:-1]* (Vx_0[1:-1,2:] - Vx_0[1:-1,0:-2]) \
+    - (dt/(2*dy))*Vy_0[1:-1,1:-1]* (Vx_0[2:,1:-1] - Vx_0[0:-2,1:-1])
+
+    Vy_1[1:-1,1:-1] = Vy_0[1:-1,1:-1] - (dt/(2*dy*rho)) * (dyn_p_0[2:,1:-1] - dyn_p_0[0:-2,1:-1])\
+    + dt *(mu/rho)* ( (Vy_0[1:-1,2:] - 2*Vy_0[1:-1,1:-1] + Vy_0[1:-1,:-2])/dx**2\
+    +(Vy_0[2:,1:-1] - 2*Vy_0[1:-1,1:-1] + Vy_0[:-2,1:-1])/dy**2)\
+    - (dt/(2*dx))*Vx_0[1:-1,1:-1]* (Vy_0[1:-1,2:] - Vy_0[1:-1,0:-2]) \
+    - (dt/(2*dy))*Vy_0[1:-1,1:-1]* (Vy_0[2:,1:-1] - Vy_0[0:-2,1:-1])
+    
+    dyn_p_0[1:-1,1:-1] = (dx**2 * dy**2)/(-2*(dx**2 + dy**2))*(-(dyn_p_0[1:-1,2:] + dyn_p_0[1:-1,:-2])/(dx**2) -\
+    (dyn_p_0[2:,1:-1] + dyn_p_0[:-2,1:-1])/(dy**2) 
+    -rho * ( ((Vx_0[1:-1,2:]-Vx_0[1:-1,:-2])/(2*dx))**2 +\
+    2*((Vx_0[2:,1:-1]-Vx_0[:-2,1:-1])/(2*dy) + (Vy_0[1:-1,2:]-Vy_0[1:-1,:-2])/(2*dx))\
+    + ((Vy_0[2:,1:-1]-Vy_0[:-2,1:-1])/(2*dy))**2))
+
+    Vx_0 = Vx_1
+    Vy_0 = Vy_1
+    # x_p_0 = x_p_1
+    # y_p_0 = y_p_1
+
+    
+    speed = np.sqrt((Vx_1**2 + Vy_1**2))
+    speed_t = np.dstack((speed_t,speed))
+    
+    Vx_t = np.dstack((Vx_t, Vx_1))
+    Vy_t = np.dstack((Vy_t, Vy_1))
+    
+    # x_t = np.dstack((x_t,x_p_1))
+    # y_t = np.dstack((y_t,y_p_1))
+    
+
+# Set up plotting
+fig = plt.figure()
+ax = plt.axes()
+contf = ax.contourf(X,Y,speed_t[:,:,0],levels = 70,cmap = 'plasma',vmin=0, vmax=2.4)
+cbar = plt.colorbar(contf,label = 'Speed (m/s)') 
+
+# Animation function
+def animate(i):
+    ax.clear()
+    ax.set_xlim(x[0],x[-1])
+    ax.set_ylim(y[0],y[-1])
+    Vx_i = Vx_t[:,:,i]
+    Vy_i = Vy_t[:,:,i]
+    # x_i = x_t[:,:,i]
+    # y_i = y_t[:,:,i]
+    speed_i = speed_t[:,:,i]
+    contf = plt.contourf(X,Y,speed_i,levels = 70,cmap = 'plasma')
+    #cb = plt.colorbar(contf)
+    #cont = plt.quiver(X, Y, Vx_i,Vy_i,angles='xy', scale_units='xy', scale=4.,color = 'red')
+    #cont = plt.scatter(x_i,y_i,color = 'black',s = 0.8)
+    ax.set_title('Density = '+str(rho)+ ' kg/m^3  Viscosity = ' +str(mu)+ ' kg/(m*s)')
+    return
+
+anim = animation.FuncAnimation(fig, animate, frames=t+1,interval=5,blit=False,repeat = True)
+plt.show()
+
+# Saving Animation
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=60, metadata=dict(artist='Me'), bitrate=1800)
+anim.save('fluid_sim P_corrected.mp4', writer=writer)
