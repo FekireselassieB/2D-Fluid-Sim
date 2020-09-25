@@ -12,4 +12,12 @@ This is my attempt at a 2d Incompressible Navier-Stokes Numerical Solver in Pyth
 
 where:
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;=&space;\rho_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;=&space;\rho_0" title="\rho = \rho_0" /></a>   is the density (held constant)
+<a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;=&space;\rho_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;=&space;\rho_0" title="\rho = \rho_0" /></a> is the density (held constant)
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;=&space;\mu_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;=&space;\mu_0" title="\mu = \mu_0" /></a> is the viscosity (held constant)
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=P&space;=&space;P(x,y,t)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?P&space;=&space;P(x,y,t)" title="P = P(x,y,t)" /></a> is the pressure (a function of x,y, and time)
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=V_x&space;=&space;V_x(x,y,t)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?V_x&space;=&space;V_x(x,y,t)" title="V_x = V_x(x,y,t)" /></a> is the x-component of the velocity (a function of x,y,and time)
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=V_y&space;=&space;V_y(x,y,t)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?V_y&space;=&space;V_y(x,y,t)" title="V_y = V_y(x,y,t)" /></a> is the y-component of the velocity (a function of x,y, and time)
