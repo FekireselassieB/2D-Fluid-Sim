@@ -1,6 +1,8 @@
 # 2D-Fluid-Sim
 This is my attempt at a 2d Incompressible Navier-Stokes Numerical Solver in Python
 
+These are the differential equations which are solved using the method of finite differences:
+
 <a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;\left&space;(&space;\frac{\partial&space;V_x&space;}{\partial&space;t}&space;&plus;&space;V_x\frac{\partial&space;V_x&space;}{\partial&space;x}&space;&plus;&space;V_y\frac{\partial&space;V_x&space;}{\partial&space;y}&space;\right&space;)&space;=&space;-\frac{\partial&space;P&space;}{\partial&space;x}&space;&plus;&space;\mu&space;\left&space;(&space;\frac{\partial^2&space;V_x&space;}{\partial&space;x^2}&space;&plus;&space;\frac{\partial^2&space;V_x&space;}{\partial&space;y^2}&space;\right&space;)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;\left&space;(&space;\frac{\partial&space;V_x&space;}{\partial&space;t}&space;&plus;&space;V_x\frac{\partial&space;V_x&space;}{\partial&space;x}&space;&plus;&space;V_y\frac{\partial&space;V_x&space;}{\partial&space;y}&space;\right&space;)&space;=&space;-\frac{\partial&space;P&space;}{\partial&space;x}&space;&plus;&space;\mu&space;\left&space;(&space;\frac{\partial^2&space;V_x&space;}{\partial&space;x^2}&space;&plus;&space;\frac{\partial^2&space;V_x&space;}{\partial&space;y^2}&space;\right&space;)" title="\rho \left ( \frac{\partial V_x }{\partial t} + V_x\frac{\partial V_x }{\partial x} + V_y\frac{\partial V_x }{\partial y} \right ) = -\frac{\partial P }{\partial x} + \mu \left ( \frac{\partial^2 V_x }{\partial x^2} + \frac{\partial^2 V_x }{\partial y^2} \right )" /></a>
 
 
