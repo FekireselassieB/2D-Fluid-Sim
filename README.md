@@ -8,3 +8,8 @@ This is my attempt at a 2d Incompressible Navier-Stokes Numerical Solver in Pyth
 
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=\frac{\partial^2&space;P}{\partial&space;x^2}&space;&plus;&space;\frac{\partial^2&space;P}{\partial&space;y^2}&space;=&space;-\rho\left&space;(&space;(\frac{\partial&space;V_x}{\partial&space;x})^2&space;\space&space;&plus;&space;2\frac{\partial&space;V_x}{\partial&space;y}\frac{\partial&space;V_y}{\partial&space;x}&space;\space&space;&plus;&space;(\frac{\partial&space;V_y}{\partial&space;y})^2&space;\right&space;)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{\partial^2&space;P}{\partial&space;x^2}&space;&plus;&space;\frac{\partial^2&space;P}{\partial&space;y^2}&space;=&space;-\rho\left&space;(&space;(\frac{\partial&space;V_x}{\partial&space;x})^2&space;\space&space;&plus;&space;2\frac{\partial&space;V_x}{\partial&space;y}\frac{\partial&space;V_y}{\partial&space;x}&space;\space&space;&plus;&space;(\frac{\partial&space;V_y}{\partial&space;y})^2&space;\right&space;)" title="\frac{\partial^2 P}{\partial x^2} + \frac{\partial^2 P}{\partial y^2} = -\rho\left ( (\frac{\partial V_x}{\partial x})^2 \space + 2\frac{\partial V_x}{\partial y}\frac{\partial V_y}{\partial x} \space + (\frac{\partial V_y}{\partial y})^2 \right )" /></a>
+
+
+where:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;=&space;\rho_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;=&space;\rho_0" title="\rho = \rho_0" /></a> is the density (held constant)
