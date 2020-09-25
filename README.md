@@ -12,4 +12,4 @@ This is my attempt at a 2d Incompressible Navier-Stokes Numerical Solver in Pyth
 
 where:
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;=&space;\rho_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;=&space;\rho_0" title="\rho = \rho_0" /></a> is the density (held constant)
+<a href="https://www.codecogs.com/eqnedit.php?latex=\rho&space;=&space;\rho_0" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\rho&space;=&space;\rho_0" title="\rho = \rho_0" /></a>   is the density (held constant)
