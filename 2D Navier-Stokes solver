@@ -1,0 +1,148 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
+""" basic 2d incompressible fluid dyn sim """
+
+""" Constants """
+dx,dy = [.05,.05] # step sizes in x and y (units in meters)
+dt = 0.001 # step size in time (units in seconds)
+rho = 1. # fluid density (held constant)
+nu = 0.1 # fluid viscosity ( I think )
+t = 1500 # number of steps to run sim
+""" ------------------------------------------------------------------- """
+
+# Definitions of forward, backward, and central difference derivative (first and second)
+def d_dx_f(A):
+    return (A[1:-1,2:]-A[1:-1,1:-1])/dx
+
+def d_dy_f(A):
+    return (A[2:,1:-1]-A[1:-1,1:-1])/dy
+
+def d_dx_b(A):
+    return (A[1:-1,1:-1]-A[1:-1,:-2])/dx
+
+def d_dy_b(A):
+    return (A[1:-1,1:-1]-A[:-2,1:-1])/dy
+
+def d_dx_c(A):
+    return (A[1:-1,2:]-A[1:-1,:-2])/(2*dx)
+
+def d_dy_c(A):
+    return (A[2:,1:-1]-A[:-2,1:-1])/(2*dy)
+
+def d_dx_2(A):
+    return (A[1:-1,2:] -2*A[1:-1,1:-1] + A[1:-1,:-2])/(dx**2)
+
+def d_dy_2(A):
+    return (A[2:,1:-1] -2*A[1:-1,1:-1] + A[:-2,1:-1])/(dy**2)
+
+
+""" Setting up coordinate grid """
+x = np.arange(0,2+dx, step = dx) # X goes from 0 to 2
+y = np.arange(0,2+dy, step = dy) # Y goes from 0 to 2
+X,Y = np.meshgrid(x,y) # creating the x,y grid
+""" -------------------------------------------------------------------- """
+
+
+""" Boundary and initial conditions """
+Vx_0 = np.zeros((len(x),len(y))) # initially Vx is set to 0 everywhere
+Vy_0 = np.zeros((len(x),len(y))) # initially Vy is set to 0 everywhere
+p_0 = np.zeros((len(x),len(y)))  # initially pressure is set to 0 everywhere
+
+Vx_0[-1,:] = 1. # flow x speed in m/s at -L < x < L and y = 2
+Vy_0[-1,:] = 0. # flow y speed in m/s at -L < x < L and y = 2
+Vx_0[0,:] = 0. # flow x speed in m/s at -L < x < L and y = 0
+Vy_0[0,:] = 0. # flow y speed in m/s at -L < x < L and y = 0
+
+Vx_0[:,0] = 0 # flow x speed in m/s at x = 0 and -L < y < L
+Vy_0[:,0] = 0 # flow y speed in m/s at x = 0 and -L < y < L
+
+Vx_0[:,-1] = 0 # flow x speed in m/s at x = 2 and -L < y < L
+Vy_0[:,-1] = 0 # flow y speed in m/s at x = 2 and -L < y < L
+
+p_0[0,:] = p_0[1,:] # dp/dy = 0 at y = 0
+p_0[-1,:] = 0 # pressure at y = 2
+p_0[:,0] = p_0[:,1] # dp/dx = 0 at x = 0
+p_0[:,-1] = p_0[:,-2] # dp/dx = 0 at x = 2
+
+""" --------------------------------------------------------------------- """
+
+
+speed_t = np.sqrt(Vx_0**2 + Vy_0**2) # the speed of the flow
+speed_t = np.reshape(speed_t,(len(x),len(y),1)) # making a 3d matrix to append all 2d speed matrices onto
+
+Vx_t = np.reshape(Vx_0,(len(x),len(y),1)) # making a 3d matrix to append all 2d Vx matrices onto
+Vy_t = np.reshape(Vy_0,(len(x),len(y),1)) # making a 3d matrix to append all 2d Vy matrices onto
+
+""" Actual loop that computes Vx,Vy, and P for all times """
+ti = 0
+for ti in range(0,t):
+    
+    Vx_old = Vx_0
+    Vy_old = Vy_0
+    
+    # updating pressure
+    for tii in range(100):
+        p_old = p_0
+        p_0[1:-1,1:-1] = (1/2)*(dx**2 * dy**2)/(dx**2 + dy**2)*( (p_old[1:-1,2:] + p_old[1:-1,:-2])/(dx**2) + (p_old[2:,1:-1] + p_old[:-2,1:-1])/(dy**2) +rho*((-1/dt) *(d_dx_c(Vx_0) + d_dy_c(Vy_0)) + d_dx_c(Vx_0)**2 + d_dy_c(Vy_0)**2 + 2*d_dx_c(Vy_0)*d_dy_c(Vx_0)))
+        
+        # reinstating pressure boundary conditions from before
+        p_0[0,:] = p_0[1,:]
+        p_0[-1,:] = 0
+        p_0[:,0] = p_0[:,1]
+        p_0[:,-1] = p_0[:,-2]
+
+    # updating Vx and Vy
+    Vx_0[1:-1,1:-1] = Vx_old[1:-1,1:-1] - Vx_old[1:-1,1:-1]*dt*d_dx_b(Vx_old) -Vy_old[1:-1,1:-1]*dt*d_dy_f(Vx_old) -(dt/rho)*d_dx_c(p_0) +(dt*nu)*( d_dx_2(Vx_old) + d_dy_2(Vx_old) )
+
+    
+    Vy_0[1:-1,1:-1] = Vy_old[1:-1,1:-1] -Vx_old[1:-1,1:-1]*dt*d_dx_b(Vy_old) -Vy_old[1:-1,1:-1]*dt*d_dy_f(Vy_old) -(dt/rho)*d_dy_c(p_0) +(dt*nu)*( d_dx_2(Vy_old) + d_dy_2(Vy_old) )
+    
+    # reinstating velocity boundary conditions from before
+    Vx_0[-1,:] = 1.
+    Vy_0[-1,:] = 0.
+    Vx_0[0,:] = 0.
+    Vy_0[0,:] = 0.
+    
+    Vx_0[:,0] = 0.
+    Vy_0[:,0] = 0.
+    
+    Vx_0[:,-1] = 0.
+    Vy_0[:,-1] = 0.
+    
+    # Appending newly calculated matrices of speed, Vx, and Vy to the appropriate 3d matrices made earlier
+    speed = np.sqrt((Vx_0**2 + Vy_0**2))
+    speed_t = np.dstack((speed_t,speed))
+    
+    Vx_t = np.dstack((Vx_t, Vx_0))
+    Vy_t = np.dstack((Vy_t, Vy_0))
+
+"""------------------------------------------------------------------------------------------------------- """   
+
+# Set up plotting
+fig = plt.figure()
+ax = plt.axes()
+contf = ax.contourf(X,Y,speed_t[:,:,0],levels = 70,cmap = 'plasma',vmin=0, vmax=2.4)
+cbar = plt.colorbar(contf,label = 'Speed (m/s)') 
+
+# Animation function
+def animate(i):
+    ax.clear()
+    ax.set_xlim(x[0],x[-1])
+    ax.set_ylim(y[0],y[-1])
+    Vx_i = Vx_t[:,:,i]
+    Vy_i = Vy_t[:,:,i]
+    speed_i = speed_t[:,:,i]
+    contf = plt.contourf(X,Y,speed_i,levels = 70,cmap = 'plasma')
+    cont = plt.quiver(X, Y, Vx_i,Vy_i,angles='xy', scale_units='xy', scale=3.,color = 'red')
+    ax.set_title('Density = '+str(rho)+ ' kg/m^3  Viscosity = ' +str(nu)+ ' kg/(m*s)')
+    return
+
+anim = animation.FuncAnimation(fig, animate, frames=t+1,interval=5,blit=False,repeat = True)
+plt.show()
+
+# Saving Animation
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=1800)
+anim.save('fluid_sim cavity flow.mp4', writer=writer)
