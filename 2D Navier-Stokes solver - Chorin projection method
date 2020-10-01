@@ -1,0 +1,166 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from scipy.interpolate import griddata
+
+""" basic 2d incompressible fluid dyn sim using Projection Method"""
+
+""" Constants """
+dx,dy = [.05,.05] # step sizes in x and y (units in meters)
+dt = .05 # step size in time (units in seconds)
+rho = 1. # fluid density (held constant)
+nu = 0.0001 # fluid viscosity ( I think )
+t = 2000 # number of steps to run sim
+""" ------------------------------------------------------------------- """
+
+# Definitions of forward, backward, and central difference derivative (first and second)
+def d_dx_f(A):
+    return (A[1:-1,2:]-A[1:-1,1:-1])/dx
+
+def d_dy_f(A):
+    return (A[2:,1:-1]-A[1:-1,1:-1])/dy
+
+def d_dx_b(A):
+    return (A[1:-1,1:-1]-A[1:-1,:-2])/dx
+
+def d_dy_b(A):
+    return (A[1:-1,1:-1]-A[:-2,1:-1])/dy
+
+def d_dx_c(A):
+    return (A[1:-1,2:]-A[1:-1,:-2])/(2*dx)
+
+def d_dy_c(A):
+    return (A[2:,1:-1]-A[:-2,1:-1])/(2*dy)
+
+def d_dx_2(A):
+    return (A[1:-1,2:] -2*A[1:-1,1:-1] + A[1:-1,:-2])/(dx**2)
+
+def d_dy_2(A):
+    return (A[2:,1:-1] -2*A[1:-1,1:-1] + A[:-2,1:-1])/(dy**2)
+
+
+""" Setting up coordinate grid """
+x = np.arange(0,4+dx, step = dx) # X goes from 0 to 2
+y = np.arange(0,4+dy, step = dy) # Y goes from 0 to 2
+X,Y = np.meshgrid(x,y) # creating the x,y grid
+""" -------------------------------------------------------------------- """
+
+
+""" Boundary and initial conditions """
+Vx_0 = np.zeros((len(x),len(y))) # initially Vx is set to 0 everywhere
+Vy_0 = np.zeros((len(x),len(y))) # initially Vy is set to 0 everywhere
+p_0 = np.zeros((len(x),len(y)))  # initially pressure is set to 0 everywhere
+
+Vx_0[-1,:] = 4. # flow x speed in m/s at -L < x < L and y = 2
+Vy_0[-1,:] = 0. # flow y speed in m/s at -L < x < L and y = 2
+Vx_0[0,:] = 0. # flow x speed in m/s at -L < x < L and y = 0
+Vy_0[0,:] = 0. # flow y speed in m/s at -L < x < L and y = 0
+
+Vx_0[:,0] = 0 # flow x speed in m/s at x = 0 and -L < y < L
+Vy_0[:,0] = 0 # flow y speed in m/s at x = 0 and -L < y < L
+
+Vx_0[:,-1] = 0 # flow x speed in m/s at x = 2 and -L < y < L
+Vy_0[:,-1] = 0 # flow y speed in m/s at x = 2 and -L < y < L
+
+p_0[0,:] = p_0[1,:] # dp/dy = 0 at y = 0
+p_0[-1,:] = 0 # pressure at y = 2
+p_0[:,0] = p_0[:,1] # dp/dx = 0 at x = 0
+p_0[:,-1] = p_0[:,-2] # dp/dx = 0 at x = 2
+
+""" --------------------------------------------------------------------- """
+
+Vx_t = np.reshape(Vx_0,(len(x),len(y),1)) # making a 3d matrix to append all 2d Vx matrices onto
+Vy_t = np.reshape(Vy_0,(len(x),len(y),1)) # making a 3d matrix to append all 2d Vy matrices onto
+
+k = 1 + 2*nu*dt*(dy**2 + dx**2)/(dx**2 * dy**2)
+m = (dy**2 * dx**2)/(2*(dy**2 + dx**2))
+for ti in range(t):
+    print(ti)
+    Vx_old = Vx_0
+    Vy_old = Vy_0
+    
+    """ Advection term """
+    
+    X_prev = X - Vx_old*dt
+    Y_prev = Y - Vy_old*dt
+    Vx_0_prev = griddata((X.ravel(),Y.ravel()), Vx_old.ravel(), (X_prev, Y_prev), method='linear')
+    Vy_0_prev = griddata((X.ravel(),Y.ravel()), Vy_old.ravel(), (X_prev, Y_prev), method='linear')
+    Vx_0[1:-1,1:-1] = Vx_0_prev[1:-1,1:-1]
+    Vy_0[1:-1,1:-1] = Vy_0_prev[1:-1,1:-1]
+    
+    """ Viscous Diffusion Term """
+    
+    for tii in range(60):
+        
+        j_x = (Vx_0[1:-1,:-2] + Vx_0[1:-1,2:])/dx**2 + (Vx_0[:-2,1:-1] + Vx_0[2:,1:-1])/dy**2 
+        Vx_0[1:-1,1:-1] = (1/k) * (Vx_old[1:-1,1:-1] + nu*dt*j_x)
+        
+        j_y = (Vy_0[1:-1,:-2] + Vy_0[1:-1,2:])/dx**2 + (Vy_0[:-2,1:-1] + Vy_0[2:,1:-1])/dy**2 
+        Vy_0[1:-1,1:-1] = (1/k) * (Vy_old[1:-1,1:-1] + nu*dt*j_y)   
+        
+        Vx_0[-1,:] = 4. # flow x speed in m/s at -L < x < L and y = 2
+        Vy_0[-1,:] = 0. # flow y speed in m/s at -L < x < L and y = 2
+        Vx_0[0,:] = 0. # flow x speed in m/s at -L < x < L and y = 0
+        Vy_0[0,:] = 0. # flow y speed in m/s at -L < x < L and y = 0
+        
+        Vx_0[:,0] = 0 # flow x speed in m/s at x = 0 and -L < y < L
+        Vy_0[:,0] = 0 # flow y speed in m/s at x = 0 and -L < y < L
+        
+        Vx_0[:,-1] = 0 # flow x speed in m/s at x = 2 and -L < y < L
+        Vy_0[:,-1] = 0 # flow y speed in m/s at x = 2 and -L < y < L
+    
+    """ add force term ?? """
+    
+    """ Take divergence of above velocity field """
+    
+    div_w = d_dx_c(Vx_0) + d_dy_c(Vy_0)
+    
+    for tii2 in range(60):
+        j_p = (p_0[1:-1,:-2] + p_0[1:-1,2:])/dx**2 + (p_0[:-2,1:-1] + p_0[2:,1:-1])/dy**2
+        p_0[1:-1,1:-1] = m * (j_p - div_w)
+    
+        p_0[0,:] = p_0[1,:] # dp/dy = 0 at y = 0
+        p_0[-1,:] = 0 # pressure at y = 2
+        p_0[:,0] = p_0[:,1] # dp/dx = 0 at x = 0
+        p_0[:,-1] = p_0[:,-2] # dp/dx = 0 at x = 2
+    
+    
+    grad_p_0_x = d_dx_c(p_0)
+    grad_p_0_y = d_dy_c(p_0)
+    
+    Vx_0[1:-1,1:-1] = Vx_0[1:-1,1:-1] - grad_p_0_x
+    Vy_0[1:-1,1:-1] = Vy_0[1:-1,1:-1] - grad_p_0_y
+    
+    Vx_t = np.dstack((Vx_t, Vx_0))
+    Vy_t = np.dstack((Vy_t, Vy_0))
+    
+
+speed_t = np.sqrt(Vx_t**2 + Vy_t**2)
+
+# Set up plotting
+fig = plt.figure()
+ax = plt.axes()
+ax.set_title('Density = '+str(rho)+ ' kg/m^3  Viscosity = ' +str(nu)+ ' kg/(m*s)')
+ax.set_xlim(x[0],x[-1])
+ax.set_ylim(y[0],y[-1])
+contf = ax.contourf(X,Y,speed_t[:,:,0],levels = 70,cmap = 'plasma',vmin=0, vmax=2.4)
+cbar = plt.colorbar(contf,label = 'Speed (m/s)') 
+
+
+# animation function
+def animate(i):
+    global contf
+    speed_i = speed_t[:,:,i]
+    for c in contf.collections:
+        c.remove()  # removes only the contours, leaves the rest intact
+    contf = plt.contourf(X, Y, speed_i, levels = 70, cmap = 'plasma')
+    return contf
+
+
+anim = animation.FuncAnimation(fig, animate, frames=t+1,interval=5,blit=False,repeat = True)
+plt.show()
+
+# Saving Animation
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=1800)
+anim.save('fluid_sim cavity flow low-res.mp4', writer=writer)
