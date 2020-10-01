@@ -1,7 +1,9 @@
 # 2D-Fluid-Sim
 This is my attempt at a 2d Incompressible Navier-Stokes Numerical Solver in Python
 
-This code is based on the Lecture note ("12 Steps to Navier-Stokes") and Python code written by Professor Lorena Barba and her students.
+The first 2d fluid simulation code is based on the Lecture notes ("12 Steps to Navier-Stokes") and Python code written by Professor Lorena Barba and her students.
+The second 2d fluid simulation code is based on the Chorin Projection Method and the following paper: 
+https://developer.download.nvidia.com/books/HTML/gpugems/gpugems_ch38.html
 
 These are the differential equations which are solved using the method of finite differences:
 
